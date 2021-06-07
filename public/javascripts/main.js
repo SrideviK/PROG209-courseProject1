@@ -5,7 +5,8 @@ let subList=[];
 
 // define a constructor to create sport objects
 let SportObject = function (pTeamName, pPlayerName, pSport, pYear, pUrl) {
-    this.ID = sportsArray.length; // auto assign id
+    //this.ID = sportsArray.length; // auto assign id
+    this.ID = Math.random().toString(16).slice(5)  // tiny chance could get duplicates!
     this.team = pTeamName;
     this.player = pPlayerName;
     this.sport=pSport;
@@ -29,27 +30,28 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
         console.log("current url == " + video);
 
-     
+        // prepend "https://" to a url to avoid error when clicking highlights
+        let chechkStr = video.substring(0,8);
+        console.log("website prefix = " + chechkStr);
+        console.log("check lowercase = " + chechkStr.toLowerCase());
+        if(chechkStr.toLowerCase() != "https://"){
+            video = "https://" + video;
+        }
+        console.log("current video string = " + video);
 
         if (playername != "" && teamname != "" && year != "" && selectedType != "" && video != ""){
-
-
             let newSport= new SportObject( teamname,playername,selectedType,year,video) ;
  
-         $.ajax({
-             url : "/AddSport",
-             type: "POST",
-             data: JSON.stringify(newSport),
-             contentType: "application/json; charset=utf-8",
-             dataType   : "json",
-              success: function (result) {
-                 console.log(result);
-             }
-         });
-
-
-
-
+            $.ajax({
+                url : "/AddSport",
+                type: "POST",
+                data: JSON.stringify(newSport),
+                contentType: "application/json; charset=utf-8",
+                dataType   : "json",
+                success: function (result) {
+                    console.log(result);
+                }
+            });
            // sportsArray.push ( new SportObject(teamname,playername,selectedType,year,video) );
         }
         else{
@@ -59,7 +61,6 @@ document.addEventListener("DOMContentLoaded", function (event) {
         document.getElementById("teamname").value="";
         document.getElementById("year").value = "";    
         document.getElementById("url").value = "";  
-
     });
 
     $(document).bind("change", "#select-type", function (event, ui) {
@@ -74,13 +75,12 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
     // displays info when li is clicked
     $(document).on("pagebeforeshow", "#displaysubset", function (event) {  
-        
         $.get("/getAllSports", function(data, status){  // AJAX get
             sportsArray = data;  // put the returned server json data into our local array
             let localID = document.getElementById('IDparmHere').innerHTML;
-        console.log("localID = " + localID);
-        let arrayPointer = GetArrayPointer(localID);
-        console.log("arrayPointer = " + arrayPointer);
+            console.log("localID = " + localID);
+            let arrayPointer = GetArrayPointer(localID);
+            console.log("arrayPointer = " + arrayPointer);
 
 
             document.getElementById('team').innerHTML = "Team: " + sportsArray[arrayPointer].team;
@@ -88,12 +88,11 @@ document.addEventListener("DOMContentLoaded", function (event) {
             document.getElementById('currentID').innerHTML = "Team Id: " + sportsArray[arrayPointer].ID;
             console.log("current url = " + sportsArray[arrayPointer].url);
             document.getElementById('highlightUrl').innerHTML = sportsArray[arrayPointer].url;
-           
+        });
+    });
 
-            });
-
-
-       
+    document.getElementById("DeleteItem").addEventListener("click", function () {
+        deleteElement(document.getElementById("IDparmHere").innerHTML);
     });
 
     $(document).bind("change", "#subSetType", function (event, ui) {
@@ -113,7 +112,6 @@ function GetArrayPointer(localID) {
     for (let i = 0; i < sportsArray.length; i++) {
         console.log("i = " + i + " +++++ " + sportsArray[i].ID);
         if (localID == sportsArray[i].ID) {
-            console.log("in the if...");
             return i;
         }
     }
@@ -122,6 +120,7 @@ function GetArrayPointer(localID) {
 function createList() {
     let myul = document.getElementById("myul");
     myul.innerHTML="";
+    console.log("in the createList()...");
 
     $.get("/getAllSports", function(data, status){  // AJAX get
         sportsArray = data;  // put the returned server json data into our local array
@@ -129,22 +128,14 @@ function createList() {
             displayElements(element);
         });
         actiavteElements();
-   
-   
     });
-
-   
-    // makes li active
-    
 };
 
 function createSubList(sport){
-
     let myul = document.getElementById("myul");
     myul.innerHTML="";
 
     sportsArray.forEach(function (element,) { 
-
         if(element.sport==sport){
             displayElements(element);
         }
@@ -164,13 +155,13 @@ function createSubList(sport){
 };
 
 function actiavteElements(){
-
     let liArray = document.getElementsByClassName('oneSport');
 
     Array.from(liArray).forEach(function(element,){
 
         element.addEventListener('click',function(){
             let parm = this.getAttribute('data-parm');
+            console.log("parm Id = " + parm);
             document.getElementById('IDparmHere').innerHTML = parm;
             document.location.href="index.html#displaysubset";
         });
@@ -183,8 +174,26 @@ function displayElements(element){
     li.setAttribute("data-parm",element.ID);
     li.innerHTML = element.sport + ":" 
                 + "<br> &emsp;Your Favourite team is - " + element.team 
+                + "<br> &emsp;Player - " + element.player;
                 + "<br><br>";
     myul.appendChild(li);
+}
+
+function deleteElement(id){
+    console.log("id to delete = " + id);
+
+    $.ajax({
+        type: "DELETE",
+        url: "/DeleteSport/" + id,
+        success: function(result){
+            console.log(result);
+        },
+        error: function (xhr, textStatus, errorThrown) {  
+            console.log('Error in Operation');  
+            alert("Server could not delete Sport with ID " + id)
+        }   
+    });
+    document.location.href = "index.html#display";
 }
 
 
