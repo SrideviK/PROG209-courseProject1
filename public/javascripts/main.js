@@ -75,24 +75,27 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
     // displays info when li is clicked
     $(document).on("pagebeforeshow", "#displaysubset", function (event) {  
-        $.get("/getAllSports", function(data, status){  // AJAX get
-            sportsArray = data;  // put the returned server json data into our local array
-            let localID = document.getElementById('IDparmHere').innerHTML;
-            console.log("localID = " + localID);
-            let arrayPointer = GetArrayPointer(localID);
+        // $.get("/getAllSports", function(data, status){  // AJAX get
+        //     sportsArray = data;  // put the returned server json data into our local array
+            //let localID = document.getElementById('IDparmHere').innerHTML;
+            let myID=localStorage.getItem('parmKey');
+            console.log("localID = " + myID);
+            let arrayPointer = GetArrayPointer(myID);
             console.log("arrayPointer = " + arrayPointer);
-
+            sportsArray=JSON.parse(localStorage.getItem('arrayKey'));
+            console.log("Test"+localStorage.getItem('arrayKey'));
 
             document.getElementById('team').innerHTML = "Team: " + sportsArray[arrayPointer].team;
             document.getElementById('player').innerHTML = "Player: " + sportsArray[arrayPointer].player;
             document.getElementById('currentID').innerHTML = "Team Id: " + sportsArray[arrayPointer].ID;
+            document.getElementById('yearFound').innerHTML="Year founded: "+sportsArray[arrayPointer].year;
             console.log("current url = " + sportsArray[arrayPointer].url);
             document.getElementById('highlightUrl').innerHTML = sportsArray[arrayPointer].url;
-        });
+      //  });
     });
 
     document.getElementById("DeleteItem").addEventListener("click", function () {
-        deleteElement(document.getElementById("IDparmHere").innerHTML);
+        deleteElement(localStorage.getItem('parmKey'));
     });
 
     $(document).bind("change", "#subSetType", function (event, ui) {
@@ -109,6 +112,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
 });
 
 function GetArrayPointer(localID) {
+    sportsArray=JSON.parse(localStorage.getItem('arrayKey'));
     for (let i = 0; i < sportsArray.length; i++) {
         console.log("i = " + i + " +++++ " + sportsArray[i].ID);
         if (localID == sportsArray[i].ID) {
@@ -127,7 +131,7 @@ function createList() {
         sportsArray.forEach(function (element,) {
             displayElements(element);
         });
-        actiavteElements();
+        actiavteElements(sportsArray);
     });
 };
 
@@ -154,15 +158,20 @@ function createSubList(sport){
     }  
 };
 
-function actiavteElements(){
+function actiavteElements(sportsArray){
     let liArray = document.getElementsByClassName('oneSport');
+
+    let stringData=JSON.stringify(sportsArray);
+    localStorage.setItem('arrayKey',stringData);
 
     Array.from(liArray).forEach(function(element,){
 
         element.addEventListener('click',function(){
             let parm = this.getAttribute('data-parm');
             console.log("parm Id = " + parm);
-            document.getElementById('IDparmHere').innerHTML = parm;
+            //document.getElementById('IDparmHere').innerHTML = parm;
+            localStorage.setItem('parmKey', parm);
+           
             document.location.href="index.html#displaysubset";
         });
     });
@@ -173,7 +182,7 @@ function displayElements(element){
     li.classList.add('oneSport'); // adding a class name to each one as a way of creating a collection
     li.setAttribute("data-parm",element.ID);
     li.innerHTML = element.sport + ":" 
-                + "<br> &emsp;Your Favourite team is - " + element.team 
+               // + "<br> &emsp;Your Favourite team is - " + element.team 
                 + "<br> &emsp;Player - " + element.player;
                 + "<br><br>";
     myul.appendChild(li);
