@@ -137,7 +137,9 @@ function createList() {
 
 function createSubList(sport){
     let myul = document.getElementById("myul");
-    myul.innerHTML="";
+    myul.innerHTML="";  
+
+    sportsArray=JSON.parse(localStorage.getItem('arrayKey'));
 
     sportsArray.forEach(function (element,) { 
         if(element.sport==sport){
@@ -147,15 +149,17 @@ function createSubList(sport){
             displayElements(element);
         }
     });
-
     if(myul.childElementCount==0){
         let p = document.createElement('p');
             p.innerHTML="No details have been added for this sport";
             myul.appendChild(p);
     }
     else{
-        actiavteElements();
+        actiavteElements(sportsArray);
     }  
+
+
+  
 };
 
 function actiavteElements(sportsArray){
